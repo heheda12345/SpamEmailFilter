@@ -67,11 +67,89 @@ def printOne(result):
     print("\033[1;35m Recall: {}\033[0m {}".format(average(result['recall']), result['recall']))
     print("\033[1;35m F1: {}\033[0m {}".format(average(result['f1']), result['f1']))
         
+
+def isBase64(st):
+    st = st.strip()
+    regex = re.compile(r"[a-zA-Z0-9\+/\n=]+", re.S)
+    return len(st) > 20 and len(st.split(" ")) == 1 and re.fullmatch(regex, st) is not None
+
+def isHtml(st):
+    if re.search('<html>', st) is not None:
+        return True
+    if re.search('<body>', st) is not None:
+        return True
+    return False
+
+def BMinus(st):
+    return re.search('B---------------------', st) is not None
+
+def confirmSpam(item):
+    return isHtml(item['content']) or BMinus(item['content'])
+
+
 def init(items, args):
-    pass
+    global spamTotal
+    global noSpamTotal
+    spamTotal = noSpamTotal = 0
+    for (i, item) in enumerate(items):
+        if confirmSpam(item):
+            continue
+        if (item['spam']):
+            spamTotal += 1
+        else:
+            noSpamTotal += 1
+
+    spamWords = []
+    noSpamWords = []
+
+    for (i, item) in enumerate(items):
+        if confirmSpam(item):
+            continue        
+        words = re.findall("[a-zA-Z\-\.'/@:]+", item['content'])
+        for j, word in enumerate(words):
+            if (word[-1] == '.'):
+                words[j] = word[:-1]
+        if item['spam']:
+            spamWords += words
+        else:
+            noSpamWords += words
+
+    spamWords = Counter(spamWords)
+    noSpamWords = Counter(noSpamWords)
+
+    global wordList
+    wordList = {}
+    for i, x in enumerate(spamWords):
+        if spamWords[x] + noSpamWords[x] < 10:
+            continue
+        wordList[x] = [spamWords[x], noSpamWords[x]]
+
+    for i, x in enumerate(noSpamWords):
+        if spamWords[x] + noSpamWords[x] < 10:
+            continue
+        wordList[x] = [spamWords[x], noSpamWords[x]]
+
 
 def testOne(item, args):
-    return True
+    if (confirmSpam(item)):
+        return True
+    words = re.findall("[a-zA-Z\-\.'/@:]+", item['content'])
+    for j, word in enumerate(words):
+        if (word[-1] == '.'):
+            words[j] = word[:-1]
+    sumSpam = 0.0
+    sumNoSpam = 0.0
+    for word in words:
+        if word not in wordList:
+            continue
+        x = wordList[word]
+        if x[0] == 0:
+            return False
+        if x[1] == 0:
+            return True
+        sumSpam += log(x[0] * 1.0 / spamTotal)
+        sumNoSpam += log(x[1] * 1.0 / noSpamTotal)
+    return sumSpam - log(spamTotal) > sumNoSpam - log(noSpamTotal)
 
 if __name__ == '__main__':
     load()
