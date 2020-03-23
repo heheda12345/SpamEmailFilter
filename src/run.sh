@@ -1,0 +1,1 @@
+python $1.py 2>&1 | tee ../result/$1.result && python utils/format.py ../result/$1.result
