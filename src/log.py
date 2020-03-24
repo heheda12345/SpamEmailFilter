@@ -132,7 +132,7 @@ def init(items, args):
 
 def select(item, args):
     if confirmSpam(item):
-        return False
+        return args['mode'] == 'confirm'
 
     words = split(item['content'])
     zeroSpam = 0
@@ -147,7 +147,18 @@ def select(item, args):
         if x[1] == 0:
             zeroNoSpam += x[0]
             continue
-    return zeroSpam > 0 and zeroNoSpam > 0
+    if args['mode'] == 'confirm':
+        return False
+    elif args['mode'] == 'spam':
+        return zeroNoSpam > 0 and zeroSpam == 0
+    elif args['mode'] == 'nospam':
+        return zeroSpam > 0 and zeroNoSpam == 0
+    elif args['mode'] == 'both':
+        return zeroSpam > 0 and zeroNoSpam > 0
+    elif args['mode'] == 'no':
+        return zeroSpam == 0 and zeroNoSpam == 0
+
+    assert(False)
 
 def testOne(item, args):
     if (confirmSpam(item)):
@@ -155,23 +166,33 @@ def testOne(item, args):
     words = split(item['content'])
     sumSpam = 0.0
     sumNoSpam = 0.0
+    logSpam = 0.0
+    logNoSpam = 0.0
+    zeroSpam = 0
+    zeroNoSpam = 0
     for word in words:
         if word not in wordList:
             continue
         x = wordList[word]
-        if x[0] == 0 or x[1] == 0:
-            if args['rate'] == 0:
-                continue
-            sumSpam += log((x[0] + args['rate']) * 1.0 / (spamTotal + args['rate'] * 2))
-            sumNoSpam += log((x[1] + args['rate']) * 1.0 / (noSpamTotal + args['rate'] * 2))
-        else:
-            sumSpam += log(x[0] * 1.0 / spamTotal)
-            sumNoSpam += log(x[1] * 1.0 / noSpamTotal)
+        if x[0] == 0:
+            zeroSpam += x[1]
+            logSpam += log(x[1], 2)
+            # print(word, item['path'], x)
+            continue
+        if x[1] == 0:
+            zeroNoSpam += x[0]
+            logNoSpam += log(x[0], 2)
+            # print(word, item['path'], x)
+            continue
+        sumSpam += log(x[0] * 1.0 / spamTotal)
+        sumNoSpam += log(x[1] * 1.0 / noSpamTotal)
+    if zeroSpam > 0 or zeroNoSpam > 0:
+        return logSpam < logNoSpam
     return sumSpam - log(spamTotal) > sumNoSpam - log(noSpamTotal)
 
 if __name__ == '__main__':
     load()
-    for rate in [0, 0.01, 0.1, 1]:
-        args = {'rate': rate}
+    for mode in ['both']:
+        args = {'mode': mode}
         result = testAll(args)
         printOne(result, args)
