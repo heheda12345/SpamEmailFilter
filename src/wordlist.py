@@ -5,6 +5,9 @@ import sys
 from collections import Counter
 from math import log
 
+TO_LOWER = 0
+DEBUG = 0
+
 def load():
     global items
     items = json.load(open('../log/raw.dump'))[:-1]
@@ -39,6 +42,8 @@ def testAll(args):
         fp.append(FP)
         fn.append(FN)
         tn.append(TN)
+        if DEBUG:
+            break
 
     acc = [(TP + TN) / (TP + TN + FP + FN) for TP, TN, FP, FN in zip(tp, tn, fp, fn)]
     precision = [TP / (TP + FP) for TP, FP in zip(tp, fp)]
@@ -81,6 +86,8 @@ def split(st):
     for j, word in enumerate(words):
         if (word[-1] == '.'):
             word = word[:-1]
+        if TO_LOWER:
+            word = word.lower()
         words[j] = word
     return words
 
@@ -114,14 +121,23 @@ def init(items, args):
     spamWords = Counter(spamWords)
     noSpamWords = Counter(noSpamWords)
 
+    f = open("../dataset/wordlist.txt")
+    dic = {}
+    for st in f.readlines():
+        dic[st.strip()] = 1
+
     global wordList
     wordList = {}
     for i, x in enumerate(spamWords):
+        if x.lower() not in dic:
+            continue
         if spamWords[x] + noSpamWords[x] < 10:
             continue
         wordList[x] = [spamWords[x], noSpamWords[x]]
 
     for i, x in enumerate(noSpamWords):
+        if x.lower() not in dic:
+            continue
         if spamWords[x] + noSpamWords[x] < 10:
             continue
         wordList[x] = [spamWords[x], noSpamWords[x]]
