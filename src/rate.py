@@ -28,17 +28,13 @@ def testAll(args):
         init(train, args)
         TP = TN = FP = FN = 0
         for item in test:
-            if ignore(item):
-                continue
             ans = testOne(item, args)
             if ans and item['spam']:
                 TP += 1
             elif ans and not item['spam']:
                 FP += 1
-                # print("FP {}".format(item['path']))
             elif not ans and item['spam']:
                 FN += 1
-                # print("FN {}".format(item['path']))
             elif not ans and not item['spam']:
                 TN += 1
         tp.append(TP)
@@ -63,7 +59,7 @@ def testAll(args):
         'f1': f1
     }
 
-def printOne(result):
+def printOne(result, args):
     print("")
     print("\033[1;34m Approach: {} {}\033[0m".format(sys.argv[0], args))
     print("\033[1;32m True positive: {}\033[0m {}".format(average(result['tp']), result['tp']))
@@ -96,7 +92,7 @@ def confirmSpam(item):
     return isBase64(item['content']) or BMinus(item['content'])
 
 def ignore(item):
-    return not isSingle(item)
+    return isSingle(item)
 
 def init(items, args):
     global spamTotal
@@ -121,7 +117,7 @@ def init(items, args):
             spamWords += words
         else:
             noSpamWords += words
-
+        
     spamWords = Counter(spamWords)
     noSpamWords = Counter(noSpamWords)
 
@@ -165,20 +161,19 @@ def testOne(item, args):
         x = wordList[word]
         if x[0] == 0:
             zeroSpam += x[1]
-            # print(word, item['path'], x)
             continue
         if x[1] == 0:
             zeroNoSpam += x[0]
-            # print(word, item['path'], x)
             continue
-        sumSpam += log(x[0] * 1.0 / spamTotal)
+        sumSpam += log(x[0] * 1.0 / spamTotal) * args['spam']
         sumNoSpam += log(x[1] * 1.0 / noSpamTotal)
     if zeroSpam > 0 or zeroNoSpam > 0:
         return zeroSpam < zeroNoSpam
-    assert(False)
     return sumSpam - log(spamTotal) > sumNoSpam - log(noSpamTotal)
 
 if __name__ == '__main__':
     load()
-    result = testAll({})
-    printOne(result)
+    for rate in [0.5, 1, 2]:
+        args = {'spam': rate}
+        result = testAll(args)
+        printOne(result, args)

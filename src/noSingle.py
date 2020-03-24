@@ -35,10 +35,8 @@ def testAll(args):
                 TP += 1
             elif ans and not item['spam']:
                 FP += 1
-                # print("FP {}".format(item['path']))
             elif not ans and item['spam']:
                 FN += 1
-                # print("FN {}".format(item['path']))
             elif not ans and not item['spam']:
                 TN += 1
         tp.append(TP)
@@ -165,11 +163,9 @@ def testOne(item, args):
         x = wordList[word]
         if x[0] == 0:
             zeroSpam += x[1]
-            # print(word, item['path'], x)
             continue
         if x[1] == 0:
             zeroNoSpam += x[0]
-            # print(word, item['path'], x)
             continue
         sumSpam += log(x[0] * 1.0 / spamTotal)
         sumNoSpam += log(x[1] * 1.0 / noSpamTotal)

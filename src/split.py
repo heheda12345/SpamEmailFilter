@@ -28,7 +28,7 @@ def testAll(args):
         init(train, args)
         TP = TN = FP = FN = 0
         for item in test:
-            if ignore(item):
+            if not select(item, args):
                 continue
             ans = testOne(item, args)
             if ans and item['spam']:
@@ -49,9 +49,9 @@ def testAll(args):
             break
 
     acc = [(TP + TN) / (TP + TN + FP + FN) for TP, TN, FP, FN in zip(tp, tn, fp, fn)]
-    precision = [TP / (TP + FP) for TP, FP in zip(tp, fp)]
+    precision = [TP / max((TP + FP), 1) for TP, FP in zip(tp, fp)]
     recall = [TP / (TP + FN) for TP, FN in zip(tp, fn)]
-    f1 = [2 * p * r / (p + r) for p, r in zip(precision, recall)]
+    f1 = [2 * p * r / max(p + r, 1) for p, r in zip(precision, recall)]
     return {
         'tp': tp,
         'tn': tn,
@@ -63,7 +63,7 @@ def testAll(args):
         'f1': f1
     }
 
-def printOne(result):
+def printOne(result, args):
     print("")
     print("\033[1;34m Approach: {} {}\033[0m".format(sys.argv[0], args))
     print("\033[1;32m True positive: {}\033[0m {}".format(average(result['tp']), result['tp']))
@@ -94,9 +94,6 @@ def split(st):
 
 def confirmSpam(item):
     return isBase64(item['content']) or BMinus(item['content'])
-
-def ignore(item):
-    return not isSingle(item)
 
 def init(items, args):
     global spamTotal
@@ -133,7 +130,10 @@ def init(items, args):
     for i, x in enumerate(noSpamWords):
         wordList[x] = [spamWords[x], noSpamWords[x]]
 
-def isSingle(item):
+def select(item, args):
+    if confirmSpam(item):
+        return args['mode'] == 'confirm'
+
     words = split(item['content'])
     zeroSpam = 0
     zeroNoSpam = 0
@@ -147,9 +147,18 @@ def isSingle(item):
         if x[1] == 0:
             zeroNoSpam += x[0]
             continue
-    if zeroSpam > 0 or zeroNoSpam > 0:
-        return True
-    return False
+    if args['mode'] == 'confirm':
+        return False
+    elif args['mode'] == 'spam':
+        return zeroNoSpam > 0 and zeroSpam == 0
+    elif args['mode'] == 'nospam':
+        return zeroSpam > 0 and zeroNoSpam == 0
+    elif args['mode'] == 'both':
+        return zeroSpam > 0 and zeroNoSpam > 0
+    elif args['mode'] == 'no':
+        return zeroSpam == 0 and zeroNoSpam == 0
+
+    assert(False)
 
 def testOne(item, args):
     if (confirmSpam(item)):
@@ -175,10 +184,11 @@ def testOne(item, args):
         sumNoSpam += log(x[1] * 1.0 / noSpamTotal)
     if zeroSpam > 0 or zeroNoSpam > 0:
         return zeroSpam < zeroNoSpam
-    assert(False)
     return sumSpam - log(spamTotal) > sumNoSpam - log(noSpamTotal)
 
 if __name__ == '__main__':
     load()
-    result = testAll({})
-    printOne(result)
+    for mode in ['confirm', 'spam', 'nospam', 'both', 'no']:
+        args = {'mode': mode}
+        result = testAll(args)
+        printOne(result, args)
