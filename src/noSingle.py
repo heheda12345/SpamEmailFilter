@@ -96,7 +96,7 @@ def confirmSpam(item):
     return isBase64(item['content']) or BMinus(item['content'])
 
 def ignore(item):
-    return not isSingle(item)
+    return isSingle(item)
 
 def init(items, args):
     global spamTotal
@@ -175,7 +175,6 @@ def testOne(item, args):
         sumNoSpam += log(x[1] * 1.0 / noSpamTotal)
     if zeroSpam > 0 or zeroNoSpam > 0:
         return zeroSpam < zeroNoSpam
-    assert(False)
     return sumSpam - log(spamTotal) > sumNoSpam - log(noSpamTotal)
 
 if __name__ == '__main__':
