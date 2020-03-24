@@ -8,5 +8,9 @@ Project of Introduction to Machine Learning, Tsinghua University, 2020 spring; A
 
 
 概率为0：直接确定是什么，而不是做平滑
+
+https://github.com/first20hours/google-10000-english/blob/master/google-10000-english.txt
+
 ## 实验结果
-naive: 0.9639 特判base64和BMinus，剩下的直接词频统计（>10有效）
+accuracy/precision/recall
+naive: 0.9724/0.9945/0.9607 特判base64和BMinus，剩下的直接词频统计（>10有效）

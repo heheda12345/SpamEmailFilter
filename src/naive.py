@@ -73,18 +73,11 @@ def isBase64(st):
     regex = re.compile(r"[a-zA-Z0-9\+/\n=]+", re.S)
     return len(st) > 20 and len(st.split(" ")) == 1 and re.fullmatch(regex, st) is not None
 
-def isHtml(st):
-    if re.search('<html>', st) is not None:
-        return True
-    if re.search('<body>', st) is not None:
-        return True
-    return False
-
 def BMinus(st):
     return re.search('B---------------------', st) is not None
 
 def confirmSpam(item):
-    return isHtml(item['content']) or BMinus(item['content'])
+    return isBase64(item['content']) or BMinus(item['content'])
 
 
 def init(items, args):
