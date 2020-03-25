@@ -85,7 +85,7 @@ def BMinus(st):
     return re.search('B---------------------', st) is not None
 
 def split(st):
-    words = re.findall("[a-zA-Z\-\.'/@:]+", st)
+    words = re.findall("[a-zA-Z0-9\-\.'/@:]+", st)
     for j, word in enumerate(words):
         if (word[-1] == '.'):
             word = word[:-1]
