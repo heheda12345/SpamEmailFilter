@@ -14,6 +14,12 @@ def load():
     allTests = json.load(open('../log/test.dump'))
     random.seed(0)
     random.shuffle(items)
+    global stopWords
+    stopWords = {}
+    f = open("../dataset/stopword.txt")
+    for st in f.readlines():
+        stopWords[st.strip()] = 1
+    f.close()
 
 def average(x):
     return sum(x)/len(x)
@@ -154,12 +160,16 @@ def init(items, args):
     global wordList
     wordList = {}
     for i, x in enumerate(spamContent):
+        if x in stopWords: continue
         wordList[x] = [spamContent[x], noSpamContent[x], spamTitle[x], noSpamTitle[x]]
     for i, x in enumerate(noSpamContent):
+        if x in stopWords: continue
         wordList[x] = [spamContent[x], noSpamContent[x], spamTitle[x], noSpamTitle[x]]
     for i, x in enumerate(spamTitle):
+        if x in stopWords: continue
         wordList[x] = [spamContent[x], noSpamContent[x], spamTitle[x], noSpamTitle[x]]
     for i, x in enumerate(noSpamTitle):
+        if x in stopWords: continue
         wordList[x] = [spamContent[x], noSpamContent[x], spamTitle[x], noSpamTitle[x]]
 
     spamSender = []
